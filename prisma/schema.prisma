@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model properties {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  price          Float
+  area           Float
+  bedrooms       Int
+  bathrooms      Int
+  address        String
+  description    String
+  type           String
+  images         String[] @default([])
+  featured       Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz
+  is_published   Boolean  @default(true)
+  is_hidden      Boolean  @default(false)
+  expire_at      DateTime @default(dbgenerated("now() + '30 days'::interval")) @db.Timestamptz
+  bumped_at      DateTime @default(now()) @db.Timestamptz
+  last_bumped_at DateTime @db.Timestamptz
+
+  seller    sellers @relation(fields: [seller_id], references: [id])
+  seller_id String  @db.Uuid
+
+  province    provinces @relation(fields: [province_id], references: [id])
+  province_id String    @db.Uuid
+
+  district    districts @relation(fields: [district_id], references: [id])
+  district_id String    @db.Uuid
+
+  ward    wards  @relation(fields: [ward_id], references: [id])
+  ward_id String @db.Uuid
+
+  is_vip           Boolean   @default(false)
+  vip_activated_at DateTime?
+  vip_expire_at    DateTime?
+
+  @@index([type])
+}
+
+model provinces {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          Int    @unique
+  name          String
+  codename      String
+  division_type String
+
+  districts  districts[]
+  properties properties[]
+}
+
+model districts {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          Int    @unique
+  name          String
+  codename      String
+  division_type String
+
+  province    provinces @relation(fields: [province_id], references: [id])
+  province_id String    @db.Uuid
+
+  wards      wards[]
+  properties properties[]
+}
+
+model wards {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          Int    @unique
+  name          String
+  codename      String
+  division_type String
+
+  district    districts    @relation(fields: [district_id], references: [id])
+  district_id String       @db.Uuid
+  properties  properties[]
+}
+
+model sellers {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  phone      String
+  avatar     String
+  email      String
+  agency     String
+  created_at DateTime     @default(now()) @db.Timestamptz
+  properties properties[]
+}
